@@ -1,6 +1,7 @@
 #include "scheduler.h"
 #include "task.h"
 #include "uart.h"
+#include "riscv.h"
 
 extern TCB tasks[];
 extern int task_count;
@@ -43,6 +44,7 @@ void yield()
 
     current = next;
 
+    //salva os registradores da task anterior e carrega os registradores da nova task
     context_switch(tasks[prev].regs, tasks[next].regs);
 }
 
@@ -58,36 +60,35 @@ void scheduler_start()
     tasks[0].entry();
 }
 
+//frame aponta para uma estrutura que contem todos os registradores salvos no momento em que ocorreu a interrupção
+//antes de chamar trap_handler
 void schedule_from_trap(uint64_t *frame){
     if(task_count < 2){
         return;
     }
 
     int prev = current;
-    int next = current_algo();
+    int next = current_algo(); //seleciona proxima tarefa com round robin
 
     if(prev == next){
         uart_print("\nprev = next\n");
         return;
     }
 
+    //salva o estado da tarefa atual
+    //como o frame contem os registradores antes da interrupção, nós salvamos todos para podermos carregar os da nova tarefa
     for(int i = 0; i < 31; i++){
         tasks[prev].regs[i] = frame[i];
     }
-
-    asm volatile(
-        "csrr %0, sepc" : "=r"(tasks[prev].sepc)
-    );
+    tasks[prev].sepc = ler_sepc();
 
     current = next;
 
+    //carregamos o estado da proxima tarefa
     for(int i = 0; i < 31; i++){
         frame[i] = tasks[next].regs[i];
     }
-
-    asm volatile(
-        "csrw sepc, %0" :: "r"(tasks[next].sepc)
-    );
+    escrever_sepc(tasks[next].sepc);
 }
 
 //pegar a tarefa atual.

@@ -3,35 +3,17 @@
 
 static uint64_t tick_interval = 100000;
 
-static inline void sbi_set_timer(uint64_t time) {
-  asm volatile(
-    "mv a0, %0\n"
-    "li a7, 0\n"
-    "ecall" :: "r"(time) : "a0", "a7", "memory"
-  );
-}
-
-//TESTE
-//LÊ O VALOR DE CST TIME
-static inline uint64_t read_time() {
-  uint64_t time;
-  __asm__ volatile ("rdtime %0" : "=r"(time));
-  return time;
-}
-
-uint64_t ler_tempo(){
-  return read_time();
-}
-
 void timer_next(void)
 {
   uint64_t now;
   uint64_t next;
 
-  asm volatile ("rdtime %0" : "=r"(now));
+  asm volatile ("rdtime %0" : "=r"(now)); //lê o registrador mtime
   next = now + tick_interval;
 
-  sbi_set_timer(next);
+  sbi_set_timer(next); //quando o mtime for maior do que o mtimecmp então temos um sinal de interrupção
+
+  //esse mtimecmp é um registrador da machine mode e acho que o openSBI ja lida com ele sem precisarmos mexer em nada
 }
 
 void timer_init(uint64_t interval){
@@ -42,9 +24,9 @@ void timer_init(uint64_t interval){
 
   timer_next();
 
-  /* Habilita STIE (bit 5 do sie) usando csrs com registrador */
+  /* Habilita STIE (bit 5 do sie)*/
   habilitar_STIE();
 
-  /* Habilita SIE global no sstatus (bit 1) – imediato 2 cabe nos 5 bits */
+  /* Habilita SIE global no sstatus (bit 1)*/
   habilitar_bit1_sstatus();
 }

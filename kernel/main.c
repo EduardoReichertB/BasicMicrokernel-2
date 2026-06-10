@@ -3,13 +3,14 @@
 #include "memory.h"
 #include "timer.h"
 #include "trap.h"
+#include "uart.h"
+#include "riscv.h"
 
 extern void trap_entry(void); //assembly
 
 /*   Tasks   */
 
-void task1()
-{
+void task1(){
     int numero = 0;
     while (1)
     {
@@ -20,8 +21,7 @@ void task1()
     }
 }
 
-void task2()
-{
+void task2(){
     int numero = 0;
     while (1)
     {
@@ -32,8 +32,7 @@ void task2()
     }
 }
 
-void task3()
-{
+void task3(){
     int numero = 0;
     while (1)
     {
@@ -44,8 +43,7 @@ void task3()
     }
 }
 
-void task4()
-{
+void task4(){
     int numero = 0;
     while (1)
     {
@@ -69,9 +67,9 @@ void kernel_main()
     xTaskCreate(task3, 2048, 1);
     xTaskCreate(task4, 2048, 1);
 
-    asm volatile (
-        "csrw stvec, %0" :: "r"(trap_entry)
-    );
+    //asm volatile ("csrw stvec, %0" :: "r"(trap_entry));
+    //diz a CPU aonde está o tratador de interrupção
+    escrever_stvec(&trap_entry);
 
     timer_init(100000);
 

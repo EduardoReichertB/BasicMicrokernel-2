@@ -14,8 +14,7 @@ static uint8_t *heap_ptr;
 
 /*   Inicialização   */
 
-void memory_init(void)
-{
+void memory_init(void){
     heap_ptr = heap_base;
 }
 
@@ -41,21 +40,18 @@ void *kmalloc(uint64_t size)
 
 /*   Free mínimo   */
 
-void kfree(void *ptr)
-{
+void kfree(void *ptr){
     /* Implementação mínima: não faz nada */
     (void)ptr;
 }
 
 /*   Estatísticas   */
 
-uint64_t memory_used(void)
-{
+uint64_t memory_used(void){
     return (uint64_t)(heap_ptr - heap_base);
 }
 
-uint64_t memory_free(void)
-{
+uint64_t memory_free(void){
     return (uint64_t)(heap_end - heap_ptr);
 }
 
